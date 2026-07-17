@@ -50,6 +50,69 @@ CREATE TABLE IF NOT EXISTS followups (
   INDEX idx_followups_status_due (status, due_at)
 );
 
+-- Productized service catalog and customer booking workflow.
+CREATE TABLE IF NOT EXISTS services (
+  id VARCHAR(64) PRIMARY KEY,
+  name VARCHAR(128) NOT NULL,
+  category VARCHAR(64) NOT NULL,
+  description VARCHAR(500) NOT NULL,
+  duration_minutes INT NOT NULL,
+  price_cents INT NOT NULL,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at VARCHAR(64) NOT NULL,
+  updated_at VARCHAR(64) NOT NULL,
+  INDEX idx_services_category_active (category, active)
+);
+CREATE TABLE IF NOT EXISTS availability_slots (
+  id VARCHAR(64) PRIMARY KEY,
+  service_id VARCHAR(64) NOT NULL,
+  starts_at VARCHAR(64) NOT NULL,
+  ends_at VARCHAR(64) NOT NULL,
+  capacity INT NOT NULL,
+  remaining INT NOT NULL,
+  status VARCHAR(32) NOT NULL,
+  INDEX idx_availability_service_time (service_id, starts_at),
+  INDEX idx_availability_status (status)
+);
+CREATE TABLE IF NOT EXISTS bookings (
+  id VARCHAR(64) PRIMARY KEY,
+  service_id VARCHAR(64) NOT NULL,
+  service_name VARCHAR(128) NOT NULL,
+  slot_id VARCHAR(64) NOT NULL,
+  customer_id VARCHAR(64) NOT NULL,
+  customer_name VARCHAR(128) NOT NULL,
+  customer_phone VARCHAR(32) NOT NULL,
+  starts_at VARCHAR(64) NOT NULL,
+  ends_at VARCHAR(64) NOT NULL,
+  status VARCHAR(32) NOT NULL,
+  payment_status VARCHAR(32) NOT NULL,
+  amount_cents INT NOT NULL,
+  created_at VARCHAR(64) NOT NULL,
+  updated_at VARCHAR(64) NOT NULL,
+  INDEX idx_bookings_status_time (status, starts_at),
+  INDEX idx_bookings_customer_time (customer_id, starts_at),
+  INDEX idx_bookings_slot (slot_id)
+);
+CREATE TABLE IF NOT EXISTS booking_events (
+  id VARCHAR(64) PRIMARY KEY,
+  booking_id VARCHAR(64) NOT NULL,
+  event_type VARCHAR(32) NOT NULL,
+  from_status VARCHAR(32) NOT NULL,
+  to_status VARCHAR(32) NOT NULL,
+  actor VARCHAR(64) NOT NULL,
+  note VARCHAR(500) NOT NULL,
+  created_at VARCHAR(64) NOT NULL,
+  INDEX idx_booking_events_timeline (booking_id, created_at, id)
+);
+CREATE TABLE IF NOT EXISTS booking_reviews (
+  id VARCHAR(64) PRIMARY KEY,
+  booking_id VARCHAR(64) NOT NULL UNIQUE,
+  customer_name VARCHAR(128) NOT NULL,
+  rating TINYINT NOT NULL,
+  content VARCHAR(1000) NOT NULL,
+  created_at VARCHAR(64) NOT NULL
+);
+
 INSERT IGNORE INTO departments (id,name) VALUES
  ('dep-general','全科门诊'),('dep-derma','皮肤科'),('dep-rehab','康复理疗'),('dep-nutrition','营养咨询');
 INSERT IGNORE INTO doctors (id,name,department,status,today_count) VALUES
@@ -98,3 +161,12 @@ INSERT IGNORE INTO followups (id,patient_id,patient_name,summary,due_at,status,c
  ('FW-0716-010','PT-010','演示客户10','满意度回访','2026-07-21','待完成','2026-07-16T00:00:00Z','2026-07-16T00:00:00Z'),
  ('FW-0716-011','PT-011','演示客户11','复诊提醒','2026-07-22','待完成','2026-07-16T00:00:00Z','2026-07-16T00:00:00Z'),
  ('FW-0716-012','PT-012','演示客户12','康复计划提醒','2026-07-22','待完成','2026-07-16T00:00:00Z','2026-07-16T00:00:00Z');
+INSERT IGNORE INTO services (id,name,category,description,duration_minutes,price_cents,active,created_at,updated_at) VALUES
+ ('svc-cleaning','深度保洁','家政保洁','厨房、卫生间重点清洁，服务前确认清单',120,19900,1,'2026-07-16T00:00:00Z','2026-07-16T00:00:00Z'),
+ ('svc-aircon','空调清洗','家电清洗','拆洗滤网与蒸发器，清新一夏',90,12900,1,'2026-07-16T00:00:00Z','2026-07-16T00:00:00Z'),
+ ('svc-install','家电安装','上门维修','水电、门锁、小家电快速排障',120,8900,1,'2026-07-16T00:00:00Z','2026-07-16T00:00:00Z');
+INSERT IGNORE INTO availability_slots (id,service_id,starts_at,ends_at,capacity,remaining,status) VALUES
+ ('slot-cleaning-0900','svc-cleaning','2026-07-20T09:00:00+08:00','2026-07-20T11:00:00+08:00',1,1,'可预约'),
+ ('slot-cleaning-1300','svc-cleaning','2026-07-20T13:00:00+08:00','2026-07-20T15:00:00+08:00',2,2,'可预约'),
+ ('slot-aircon-1000','svc-aircon','2026-07-20T10:00:00+08:00','2026-07-20T11:30:00+08:00',2,2,'可预约'),
+ ('slot-install-1500','svc-install','2026-07-20T15:00:00+08:00','2026-07-20T17:00:00+08:00',1,1,'可预约');

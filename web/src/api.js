@@ -66,6 +66,20 @@ export function createApiClient({ baseUrl, fetchImpl = globalThis.fetch } = {}) 
     listFollowups: (query) => request(withQuery('/followups', query)),
     createFollowup: (input, idempotencyKey) => request('/followups', { method: 'POST', body: input, idempotencyKey }),
     completeFollowup: (id, idempotencyKey) => request(`/followups/${encodeURIComponent(id)}/complete`, { method: 'POST', idempotencyKey }),
+    listServices: (query) => request(withQuery('/services', query)),
+    listAvailability: (query) => request(withQuery('/availability', query)),
+    listBookings: (query) => request(withQuery('/bookings', query)),
+    getBooking: (id) => request(`/bookings/${encodeURIComponent(id)}`),
+    listBookingEvents: (id) => request(`/bookings/${encodeURIComponent(id)}/events`),
+    createBooking: (input, idempotencyKey) => request('/bookings', { method: 'POST', body: input, idempotencyKey }),
+    updateBookingStatus: (id, status, actor, idempotencyKey) => request(`/bookings/${encodeURIComponent(id)}/status`, {
+      method: 'POST',
+      body: { status, ...(actor ? { actor } : {}) },
+      idempotencyKey,
+    }),
+    rescheduleBooking: (id, input, idempotencyKey) => request(`/bookings/${encodeURIComponent(id)}/reschedule`, { method: 'POST', body: input, idempotencyKey }),
+    refundBooking: (id, idempotencyKey) => request(`/bookings/${encodeURIComponent(id)}/refund`, { method: 'POST', idempotencyKey }),
+    createBookingReview: (id, input, idempotencyKey) => request(`/bookings/${encodeURIComponent(id)}/review`, { method: 'POST', body: input, idempotencyKey }),
   }
 }
 

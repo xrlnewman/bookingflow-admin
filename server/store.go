@@ -40,19 +40,25 @@ type CareStore interface {
 
 // MemoryStore is deterministic and dependency-free for unit tests and demos.
 type MemoryStore struct {
-	mu           sync.RWMutex
-	seq          atomic.Uint64
-	appointments map[string]Appointment
-	events       map[string][]AppointmentEvent
-	followups    map[string]Followup
-	departments  []Department
-	doctors      []Doctor
-	patients     []Patient
+	mu            sync.RWMutex
+	seq           atomic.Uint64
+	appointments  map[string]Appointment
+	events        map[string][]AppointmentEvent
+	followups     map[string]Followup
+	services      map[string]ServiceOffering
+	availability  map[string]AvailabilitySlot
+	bookings      map[string]Booking
+	bookingEvents map[string][]BookingEvent
+	reviews       map[string]BookingReview
+	departments   []Department
+	doctors       []Doctor
+	patients      []Patient
 }
 
 func NewMemoryStore() *MemoryStore {
 	s := &MemoryStore{
 		appointments: map[string]Appointment{}, events: map[string][]AppointmentEvent{}, followups: map[string]Followup{},
+		services: map[string]ServiceOffering{}, availability: map[string]AvailabilitySlot{}, bookings: map[string]Booking{}, bookingEvents: map[string][]BookingEvent{}, reviews: map[string]BookingReview{},
 		departments: []Department{{ID: "dep-general", Name: "全科门诊"}, {ID: "dep-derma", Name: "皮肤科"}, {ID: "dep-rehab", Name: "康复理疗"}, {ID: "dep-nutrition", Name: "营养咨询"}},
 		doctors:     []Doctor{{ID: "doc-01", Name: "林负责人", Department: "全科门诊", Status: "出诊中", TodayCount: 18}, {ID: "doc-02", Name: "沈负责人", Department: "皮肤科", Status: "出诊中", TodayCount: 16}, {ID: "doc-03", Name: "赵负责人", Department: "康复理疗", Status: "出诊中", TodayCount: 12}, {ID: "doc-04", Name: "周负责人", Department: "营养咨询", Status: "休息中", TodayCount: 10}, {ID: "doc-05", Name: "陈负责人", Department: "全科门诊", Status: "出诊中", TodayCount: 14}, {ID: "doc-06", Name: "王负责人", Department: "皮肤科", Status: "出诊中", TodayCount: 16}},
 	}
@@ -72,6 +78,7 @@ func NewMemoryStore() *MemoryStore {
 		id := fmt.Sprintf("FW-0716-%03d", i)
 		s.followups[id] = Followup{ID: id, PatientID: fmt.Sprintf("PT-%03d", i), Patient: s.patients[i-1].Name, Summary: "复诊提醒与满意度回访", DueAt: "2026-07-17", Status: FollowupPending, CreatedAt: nowUTC(), UpdatedAt: nowUTC()}
 	}
+	seedProductData(s)
 	s.seq.Store(1000)
 	return s
 }

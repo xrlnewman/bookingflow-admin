@@ -189,7 +189,7 @@ func httpStatusForError(err error) int {
 		return 400
 	case errors.Is(err, ErrNotFound):
 		return 404
-	case errors.Is(err, ErrInvalidTransition), errors.Is(err, ErrIdempotencyBusy):
+	case errors.Is(err, ErrInvalidTransition), errors.Is(err, ErrInvalidBookingTransition), errors.Is(err, ErrSlotUnavailable), errors.Is(err, ErrReviewExists), errors.Is(err, ErrBookingAlreadyRefunded), errors.Is(err, ErrIdempotencyBusy):
 		return 409
 	default:
 		return 500
